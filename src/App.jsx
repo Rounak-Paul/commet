@@ -1,32 +1,9 @@
-import React, { useRef, useState } from 'react';
 import './App.css';
 
-// Firebase v9+ Modular imports
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore, collection, query, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
-
-// React Firebase Hooks
+import React from 'react';
+import { PaperUploadForm } from './Components/PaperUploadForm'; 
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAemGpfJdDxLsrjs1512DsaJX2bJtz4kLk",
-  authDomain: "commet-2895c.firebaseapp.com",
-  projectId: "commet-2895c",
-  storageBucket: "commet-2895c.firebasestorage.app",
-  messagingSenderId: "946264157919",
-  appId: "1:946264157919:web:e1a5cbd1faf63007cec36a",
-  measurementId: "G-Y28LKRTZ2E"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const firestore = getFirestore(app);
-const analytics = getAnalytics(app);
+import { auth } from './Components/firebase'; 
 
 function App() {
   const [user] = useAuthState(auth);
@@ -34,13 +11,19 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>⚛️🔥💬</h1>
-        <SignOut />
+        <h1>Research Paper Management</h1>
+        {user && <SignOut />}
       </header>
 
-      <section>
-        {user ? <ChatRoom /> : <SignIn />}
-      </section>
+      <main>
+        {user ? (
+          <>
+            <PaperUploadForm />
+          </>
+        ) : (
+          <SignIn />
+        )}
+      </main>
     </div>
   );
 }
@@ -54,7 +37,7 @@ function SignIn() {
   return (
     <>
       <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
-      <p>Do not violate the community guidelines or you will be banned for life!</p>
+      <p>Please sign in to upload papers.</p>
     </>
   );
 }
@@ -62,63 +45,6 @@ function SignIn() {
 function SignOut() {
   return auth.currentUser && (
     <button className="sign-out" onClick={() => signOut(auth)}>Sign Out</button>
-  );
-}
-
-function ChatRoom() {
-  const dummy = useRef();
-  const messagesRef = collection(firestore, 'messages');
-  const messagesQuery = query(messagesRef, orderBy('createdAt'), limit(25));
-
-  const [messages] = useCollectionData(messagesQuery, { idField: 'id' });
-
-  const [formValue, setFormValue] = useState('');
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-
-    const { uid, photoURL } = auth.currentUser;
-
-    await addDoc(messagesRef, {
-      text: formValue,
-      createdAt: serverTimestamp(),
-      uid,
-      photoURL
-    });
-
-    setFormValue('');
-    dummy.current.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  return (
-    <>
-      <main>
-        {messages && messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
-        <span ref={dummy}></span>
-      </main>
-
-      <form onSubmit={sendMessage}>
-        <input
-          value={formValue}
-          onChange={(e) => setFormValue(e.target.value)}
-          placeholder="Say something nice"
-        />
-        <button type="submit" disabled={!formValue}>🕊️</button>
-      </form>
-    </>
-  );
-}
-
-function ChatMessage(props) {
-  const { text, uid, photoURL } = props.message;
-
-  const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received';
-
-  return (
-    <div className={`message ${messageClass}`}>
-      <img src={photoURL || 'https://api.adorable.io/avatars/23/abott@adorable.png'} alt="Avatar" />
-      <p>{text}</p>
-    </div>
   );
 }
 
