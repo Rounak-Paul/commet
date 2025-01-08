@@ -1,9 +1,8 @@
-import './App.css';
-
 import React from 'react';
-import { PaperUploadForm } from './Components/PaperUploadForm'; 
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './Components/firebase'; 
+import { auth } from './Components/firebase'; // Import the auth from firebase.js
+import './App.css';
 
 function App() {
   const [user] = useAuthState(auth);
@@ -11,40 +10,35 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>Research Paper Management</h1>
-        {user && <SignOut />}
+        <h1>Research Papers Hub</h1>
+        <SignOut />
       </header>
-
-      <main>
-        {user ? (
-          <>
-            <PaperUploadForm />
-          </>
-        ) : (
-          <SignIn />
-        )}
-      </main>
+      <section>
+        {user ? <h2>Welcome, {user.displayName}</h2> : <SignIn />}
+      </section>
     </div>
   );
 }
 
 function SignIn() {
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+      console.log("Signed in successfully!");
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+    }
   };
 
-  return (
-    <>
-      <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
-      <p>Please sign in to upload papers.</p>
-    </>
-  );
+  return <button onClick={signInWithGoogle}>Sign in with Google</button>;
 }
 
 function SignOut() {
-  return auth.currentUser && (
-    <button className="sign-out" onClick={() => signOut(auth)}>Sign Out</button>
+  return (
+    auth.currentUser && (
+      <button onClick={() => signOut(auth)}>Sign Out</button>
+    )
   );
 }
 
