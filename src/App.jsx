@@ -1,44 +1,37 @@
-import React from 'react';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './Components/firebase'; // Import the auth from firebase.js
-import './App.css';
+import Login from "./components/auth/login";
+import Register from "./components/auth/register";
+
+import Header from "./components/header";
+import Home from "./components/home";
+
+import { AuthProvider } from "./contexts/authContext";
+import { useRoutes } from "react-router-dom";
 
 function App() {
-  const [user] = useAuthState(auth);
-
+  const routesArray = [
+    {
+      path: "*",
+      element: <Login />,
+    },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/register",
+      element: <Register />,
+    },
+    {
+      path: "/home",
+      element: <Home />,
+    },
+  ];
+  let routesElement = useRoutes(routesArray);
   return (
-    <div className="App">
-      <header>
-        <h1>Research Papers Hub</h1>
-        <SignOut />
-      </header>
-      <section>
-        {user ? <h2>Welcome, {user.displayName}</h2> : <SignIn />}
-      </section>
-    </div>
-  );
-}
-
-function SignIn() {
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      console.log("Signed in successfully!");
-    } catch (error) {
-      console.error("Sign-in failed:", error);
-    }
-  };
-
-  return <button onClick={signInWithGoogle}>Sign in with Google</button>;
-}
-
-function SignOut() {
-  return (
-    auth.currentUser && (
-      <button onClick={() => signOut(auth)}>Sign Out</button>
-    )
+    <AuthProvider>
+      <Header />
+      <div className="w-full h-screen flex flex-col">{routesElement}</div>
+    </AuthProvider>
   );
 }
 
